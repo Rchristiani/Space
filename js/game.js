@@ -72,7 +72,7 @@ Game.createStar = function() {
 	this.x = Math.floor(Math.random() * Game.gameWidth);
 	this.y = Math.floor(Math.random() * Game.gameHeight);
 	this.a = Math.random();
-}
+};
 for (var i = 0; i < 50; i++){
 	Game.stars.push(new Game.createStar());
 }
