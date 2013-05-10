@@ -2,6 +2,8 @@ var Game = {};
 Game.canvas = document.getElementById('canvas');
 Game.ctx = Game.canvas.getContext('2d');
 //Constants
+Game.canvas.height = window.innerHeight;
+Game.canvas.width = window.innerWidth;
 Game.gameHeight = Game.canvas.height;
 Game.gameWidth = Game.canvas.width;
 //Set up game
@@ -30,6 +32,7 @@ Game.player = {
 	hp : 100,
 	W : 64,
 	H : 64,
+	speed: 10,
 	paint : function(){
 		var img = new Image();
 		img.src = "imgs/player_ship.gif";
@@ -52,16 +55,16 @@ Game.movement = function(){
 		//39 is right
 		//40 is Down
 		if(e.keyCode === 37){
-			Game.player.x -= Game.player.W;
+			Game.player.x -= Game.player.speed;
 		}
 		else if(e.keyCode === 38){
-			Game.player.y -= Game.player.W;
+			Game.player.y -= Game.player.speed;
 		}
 		else if(e.keyCode === 39){
-			Game.player.x += Game.player.W;
+			Game.player.x += Game.player.speed;
 		}
 		else if(e.keyCode === 40){
-			Game.player.y += Game.player.W;
+			Game.player.y += Game.player.speed;
 		}
 	});
 };
