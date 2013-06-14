@@ -25,13 +25,13 @@ Game.draw = function() {
 	}
 	//Reset alpha
 	Game.ctx.globalAlpha = 1;
-	updateBullets();
-	renderBullets();
+	Game.handleBullets.updateBullets();
+	Game.handleBullets.renderBullets();
 };
 //Player Object
 Game.player = {
 	x : 0,
-	y : 0,
+	y : Game.gameHeight/2,
 	right: false,
 	left: false,
 	up: false,
@@ -46,10 +46,12 @@ Game.player = {
 		Game.ctx.drawImage(img,this.x,this.y);
 	},
 };
+//Empty bullet arrays
 Game.bullets = [];
-function Bullet(x,y) {
-	this.x = x,
-	this.y = y,
+//Bullet constructor
+Game.Bullet = function(x,y) {
+	this.x = x;
+	this.y = y;
 	//Render
 	this.render = function(){
 		Game.ctx.fillStyle = '#81F6FF';
@@ -60,24 +62,32 @@ function Bullet(x,y) {
 	this.update = function(){
 		this.x += 20;
 	};
-}
-function renderBullets() {
-	for(var i = 0; i<Game.bullets.length; i++){
-		Game.bullets[i].render();
+};
+//Handle updating and rendering of bullets
+Game.handleBullets = {
+	renderBullets: function() {
+		//Loop through bullets and render them
+		for(var i = 0; i<Game.bullets.length; i++){
+			Game.bullets[i].render();
+		}
+	},
+	updateBullets: function() {
+		//Loop through bullets and update them
+		for(var i = 0; i<Game.bullets.length; i++){
+			Game.bullets[i].update();
+		}
 	}
-}
-function updateBullets() {
-	for(var i = 0; i<Game.bullets.length; i++){
-		Game.bullets[i].update();
-	}
-}
+};
 //Enemy object
-Game.enemy = function() {
+Game.Enemy = function() {
 	this.x = Game.gameWidth - 40;
 	this.y = Math.floor(Math.random()*Game.gameHeight);
 	this.W = 40;
 	this.H = 40;
 	this.color = "#0b6a8e";
+	this.paint = function() {
+
+	};
 };
 //Movement logic
 Game.movement = {
@@ -88,6 +98,7 @@ Game.movement = {
 		//40 is Down
 		if(e.keyCode === 37){
 			Game.player.left = true;
+			//Hand handleing for player going beyond bounds
 			Game.player.x -= Game.player.speed;
 		}
 		if(e.keyCode === 38){
@@ -95,7 +106,7 @@ Game.movement = {
 			Game.player.y -= Game.player.speed;
 		}
 		if(e.keyCode === 39){
-			Game.player.right = true
+			Game.player.right = true;
 			Game.player.x += Game.player.speed;
 		}
 		if(e.keyCode === 40){
@@ -105,7 +116,7 @@ Game.movement = {
 		//Space bar
 		if(e.keyCode === 32){
 			//create a new bullet at players x and y
-			var bullet = new Bullet(Game.player.x, Game.player.y);
+			var bullet = new Game.Bullet(Game.player.x, Game.player.y);
 			Game.bullets.push(bullet);
 		}
 	},
