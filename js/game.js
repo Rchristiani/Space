@@ -9,12 +9,14 @@ Game.gameWidth = Game.canvas.width;
 //Set up game
 Game.init = function() {
 	Game.update();
-	Game.movement();
+	window.addEventListener('keydown',Game.movement.keyDown);
+	window.addEventListener('keyup', Game.movement.keyUp);
 };
 //Draw the frames
 Game.draw = function() {
 	Game.ctx.fillStyle = "#002a2a";
 	Game.ctx.fillRect(0,0,Game.gameWidth,Game.gameHeight);
+	Game.movement.checkKeys();
 	Game.player.paint();
 	for(var i = 0; i < Game.stars.length; i++){
 		Game.ctx.globalAlpha = Game.stars[i].a;
@@ -23,12 +25,17 @@ Game.draw = function() {
 	}
 	//Reset alpha
 	Game.ctx.globalAlpha = 1;
-
+	updateBullets();
+	renderBullets();
 };
 //Player Object
 Game.player = {
 	x : 0,
 	y : 0,
+	right: false,
+	left: false,
+	up: false,
+	down: false,
 	hp : 100,
 	W : 64,
 	H : 64,
@@ -37,8 +44,33 @@ Game.player = {
 		var img = new Image();
 		img.src = "imgs/player_ship.gif";
 		Game.ctx.drawImage(img,this.x,this.y);
-	}
+	},
 };
+Game.bullets = [];
+function Bullet(x,y) {
+	this.x = x,
+	this.y = y,
+	//Render
+	this.render = function(){
+		Game.ctx.fillStyle = '#81F6FF';
+		Game.ctx.fillRect(this.x,this.y + 4, 10, 4);
+		Game.ctx.fillRect(this.x, this.y + 52, 10, 4);	
+	};
+	//Update
+	this.update = function(){
+		this.x += 20;
+	};
+}
+function renderBullets() {
+	for(var i = 0; i<Game.bullets.length; i++){
+		Game.bullets[i].render();
+	}
+}
+function updateBullets() {
+	for(var i = 0; i<Game.bullets.length; i++){
+		Game.bullets[i].update();
+	}
+}
 //Enemy object
 Game.enemy = function() {
 	this.x = Game.gameWidth - 40;
@@ -48,25 +80,63 @@ Game.enemy = function() {
 	this.color = "#0b6a8e";
 };
 //Movement logic
-Game.movement = function(){
-	addEventListener('keydown',function(e) {
+Game.movement = {
+	keyDown: function(e) {
 		//37 is left
 		//38 is up
 		//39 is right
 		//40 is Down
 		if(e.keyCode === 37){
+			Game.player.left = true;
 			Game.player.x -= Game.player.speed;
 		}
-		else if(e.keyCode === 38){
+		if(e.keyCode === 38){
+			Game.player.up = true;
 			Game.player.y -= Game.player.speed;
 		}
-		else if(e.keyCode === 39){
+		if(e.keyCode === 39){
+			Game.player.right = true
 			Game.player.x += Game.player.speed;
 		}
-		else if(e.keyCode === 40){
+		if(e.keyCode === 40){
+			Game.player.down = true;
 			Game.player.y += Game.player.speed;
 		}
-	});
+		//Space bar
+		if(e.keyCode === 32){
+			//create a new bullet at players x and y
+			var bullet = new Bullet(Game.player.x, Game.player.y);
+			Game.bullets.push(bullet);
+		}
+	},
+	keyUp: function(e){
+		if(e.keyCode === 37){
+			Game.player.left = false;
+		}
+		if(e.keyCode === 38){
+			Game.player.up = false;
+		}
+		if(e.keyCode === 39){
+			Game.player.right = false;
+		}
+		if(e.keyCode === 40){
+			Game.player.down = false;
+		}
+	},
+	checkKeys: function(){
+		if(Game.player.left === true){
+			Game.player.x -= Game.player.speed;
+		}
+		if(Game.player.up === true){
+			Game.player.y -= Game.player.speed;
+		}
+		if(Game.player.right === true){
+			Game.player.x += Game.player.speed;
+		}
+		if(Game.player.down === true){
+			Game.player.y += Game.player.speed;
+		}
+	}
 };
 //Make empty array for stars
 Game.stars = [];
@@ -80,7 +150,7 @@ for (var i = 0; i < 50; i++){
 	Game.stars.push(new Game.createStar());
 }
 Game.update = function() {
-	setInterval(Game.draw,33);
+	setInterval(Game.draw,1000/50);
 };
 //Start it off
 Game.init();
