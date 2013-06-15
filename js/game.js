@@ -18,6 +18,7 @@ Game.draw = function() {
 	Game.ctx.fillRect(0,0,Game.gameWidth,Game.gameHeight);
 	Game.movement.checkKeys();
 	Game.player.paint();
+	enemy.paint();
 	for(var i = 0; i < Game.stars.length; i++){
 		Game.ctx.globalAlpha = Game.stars[i].a;
 		Game.ctx.fillStyle = "#ffffff";
@@ -26,6 +27,7 @@ Game.draw = function() {
 	//Reset alpha
 	Game.ctx.globalAlpha = 1;
 	Game.handleBullets.updateBullets();
+	Game.handleBullets.collisionCheck();	
 	Game.handleBullets.renderBullets();
 };
 //Player Object
@@ -40,23 +42,22 @@ Game.player = {
 	W : 64,
 	H : 64,
 	speed: 10,
+	img: new Image(),
 	paint : function(){
-		var img = new Image();
-		img.src = "imgs/player_ship.gif";
-		Game.ctx.drawImage(img,this.x,this.y);
+		this.img.src = "imgs/player_ship.gif";
+		Game.ctx.drawImage(this.img,this.x,this.y);
 	},
 };
 //Empty bullet arrays
 Game.bullets = [];
 //Bullet constructor
 Game.Bullet = function(x,y) {
-	this.x = x;
-	this.y = y;
+	this.x = x + 50;
+	this.y = y + 26;
 	//Render
 	this.render = function(){
-		Game.ctx.fillStyle = '#81F6FF';
-		Game.ctx.fillRect(this.x,this.y + 4, 10, 4);
-		Game.ctx.fillRect(this.x, this.y + 52, 10, 4);	
+		Game.ctx.fillStyle = '#81FZ6FF';
+		Game.ctx.fillRect(this.x,this.y, 10, 4);
 	};
 	//Update
 	this.update = function(){
@@ -76,19 +77,37 @@ Game.handleBullets = {
 		for(var i = 0; i<Game.bullets.length; i++){
 			Game.bullets[i].update();
 		}
+	},
+	collisionCheck: function() {
+		//For all the bullets check to see if they are 
+		//at the same position as the enemy
+		for(var i = 0; i<Game.bullets.length; i++){
+			//If the bullets x pos is greater than the enemies
+			//And the x pos is less than the x + the w aka inside the box
+			//Check the same for y
+			//Hit!
+			if((Game.bullets[i].x > enemy.x) && (Game.bullets[i].x < enemy.x + enemy.W) 
+				&& (Game.bullets[i].y > enemy.y) && (Game.bullets[i].y < enemy.y + enemy.H) ){
+				console.log('hit');
+				//Remove Bullet
+				Game.bullets.splice(i,1);  
+			}
+		}
 	}
 };
-//Enemy object
+//Enemy constructor
 Game.Enemy = function() {
-	this.x = Game.gameWidth - 40;
+	this.x = Game.gameWidth - 64;
 	this.y = Math.floor(Math.random()*Game.gameHeight);
-	this.W = 40;
-	this.H = 40;
-	this.color = "#0b6a8e";
+	this.W = 58;
+	this.H = 58;
+	this.img = new Image();
 	this.paint = function() {
-
+		this.img.src = 'imgs/enemy_ship.gif';
+		Game.ctx.drawImage(this.img,this.x,this.y);
 	};
 };
+var enemy = new Game.Enemy();
 //Movement logic
 Game.movement = {
 	keyDown: function(e) {
@@ -106,7 +125,7 @@ Game.movement = {
 			Game.player.y -= Game.player.speed;
 		}
 		if(e.keyCode === 39){
-			Game.player.right = true;
+			Game.player.right = true;	
 			Game.player.x += Game.player.speed;
 		}
 		if(e.keyCode === 40){
@@ -161,7 +180,7 @@ for (var i = 0; i < 50; i++){
 	Game.stars.push(new Game.createStar());
 }
 Game.update = function() {
-	setInterval(Game.draw,1000/50);
+	setInterval(Game.draw,1000/60);
 };
 //Start it off
 Game.init();
