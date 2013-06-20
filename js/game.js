@@ -18,7 +18,12 @@ Game.draw = function() {
 	Game.ctx.fillRect(0,0,Game.gameWidth,Game.gameHeight);
 	Game.movement.checkKeys();
 	Game.player.paint();
-	enemy.paint();
+	
+	if(Game.enemies.length === 0){
+		Game.makeEnemies.make();
+	}
+	Game.makeEnemies.paint();
+	
 	for(var i = 0; i < Game.stars.length; i++){
 		Game.ctx.globalAlpha = Game.stars[i].a;
 		Game.ctx.fillStyle = "#ffffff";
@@ -29,6 +34,8 @@ Game.draw = function() {
 	Game.handleBullets.updateBullets();
 	Game.handleBullets.collisionCheck();	
 	Game.handleBullets.renderBullets();
+	
+	Game.enemyAttack();
 };
 //Player Object
 Game.player = {
@@ -86,11 +93,14 @@ Game.handleBullets = {
 			//And the x pos is less than the x + the w aka inside the box
 			//Check the same for y
 			//Hit!
-			if((Game.bullets[i].x > enemy.x) && (Game.bullets[i].x < enemy.x + enemy.W) 
-				&& (Game.bullets[i].y > enemy.y) && (Game.bullets[i].y < enemy.y + enemy.H) ){
-				console.log('hit');
-				//Remove Bullet
-				Game.bullets.splice(i,1);  
+			for(var j = 0; j<Game.enemies.length; j++){
+				if((Game.bullets[i].x > Game.enemies[j].x) && (Game.bullets[i].x < Game.enemies[j].x + Game.enemies[j].W) && (Game.bullets[i].y > Game.enemies[j].y) && (Game.bullets[i].y < Game.enemies[j].y + Game.enemies[j].H) ){
+					Game.enemies[j].img.src = 'imgs/enemy_explosion.png';	
+					//Remove Enemy
+					Game.enemies.splice(j,1); 
+					//Remove Bullet
+					Game.bullets.splice(i,1); 
+				}
 			}
 		}
 	}
@@ -102,12 +112,44 @@ Game.Enemy = function() {
 	this.W = 58;
 	this.H = 58;
 	this.img = new Image();
+	this.img.src = 'imgs/enemy_ship.gif';
 	this.paint = function() {
-		this.img.src = 'imgs/enemy_ship.gif';
 		Game.ctx.drawImage(this.img,this.x,this.y);
 	};
+	this.movement = function() {
+		//Move across the screen?
+	};
+	this.attack = function(x,y) {
+		console.log('Attack!!');
+		console.log(x);
+		console.log(y);
+		//Fires at you if you are in their line of sight?
+	};
+	this.bullets =[];
 };
-var enemy = new Game.Enemy();
+Game.enemies = [];
+Game.makeEnemies ={
+	make: function(){
+		for (var i = 0; i < 6; i++) {
+			Game.enemies.push(new Game.Enemy());
+		}
+	},
+	paint: function(){
+		for (var i = 0; i < Game.enemies.length; i++) {
+			Game.enemies[i].paint();
+		}
+	}
+};
+Game.enemyAttack = function() {
+	for(var i = 0; i < Game.enemies.length; i++) {
+		if(Game.enemies[i].y === Game.player.y + 64 ){
+			//How you account for a range?
+			//trigger attack on i enemy with current postions
+			//loop through y + enemy height
+			Game.enemies[i].attack(Game.enemies[i].x,Game.enemies[i].y);
+		}
+	}
+};
 //Movement logic
 Game.movement = {
 	keyDown: function(e) {
