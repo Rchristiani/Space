@@ -17,7 +17,7 @@ Game.draw = function() {
 	Game.ctx.fillStyle = "#002a2a";
 	Game.ctx.fillRect(0,0,Game.gameWidth,Game.gameHeight);
 	Game.movement.checkKeys();
-	Game.player.paint();
+	Game.Player.paint();
 	
 	if(Game.enemies.length === 0){
 		Game.makeEnemies.make();
@@ -31,14 +31,18 @@ Game.draw = function() {
 	}
 	//Reset alpha
 	Game.ctx.globalAlpha = 1;
-	Game.handleBullets.updateBullets();
-	Game.handleBullets.collisionCheck();	
-	Game.handleBullets.renderBullets();
+	Game.Player.handleBullets.updateBullets();
+	Game.Player.handleBullets.collisionCheck();	
+	Game.Player.handleBullets.renderBullets();
+
+	Game.EnemyBulletHandeler.updateBullets();
+	Game.EnemyBulletHandeler.renderBullets();
+
 	
 	Game.enemyAttack();
 };
 //Player Object
-Game.player = {
+Game.Player = {
 	x : 0,
 	y : Game.gameHeight/2,
 	right: false,
@@ -51,12 +55,12 @@ Game.player = {
 	speed: 10,
 	img: new Image(),
 	paint : function(){
-		this.img.src = "imgs/player_ship.gif";
+		this.img.src = "imgs/Player_ship.gif";
 		Game.ctx.drawImage(this.img,this.x,this.y);
 	},
 };
 //Empty bullet arrays
-Game.bullets = [];
+Game.Player.bullets = [];
 //Bullet constructor
 Game.Bullet = function(x,y) {
 	this.x = x + 50;
@@ -72,34 +76,37 @@ Game.Bullet = function(x,y) {
 	};
 };
 //Handle updating and rendering of bullets
-Game.handleBullets = {
+Game.Player.handleBullets = {
 	renderBullets: function() {
 		//Loop through bullets and render them
-		for(var i = 0; i<Game.bullets.length; i++){
-			Game.bullets[i].render();
+		for(var i = 0; i<Game.Player.bullets.length; i++){
+			Game.Player.bullets[i].render();
 		}
 	},
 	updateBullets: function() {
 		//Loop through bullets and update them
-		for(var i = 0; i<Game.bullets.length; i++){
-			Game.bullets[i].update();
+		for(var i = 0; i<Game.Player.bullets.length; i++){
+			Game.Player.bullets[i].update();
 		}
 	},
 	collisionCheck: function() {
 		//For all the bullets check to see if they are 
 		//at the same position as the enemy
-		for(var i = 0; i<Game.bullets.length; i++){
+		for(var i = 0; i<Game.Player.bullets.length; i++){
 			//If the bullets x pos is greater than the enemies
 			//And the x pos is less than the x + the w aka inside the box
 			//Check the same for y
 			//Hit!
 			for(var j = 0; j<Game.enemies.length; j++){
-				if((Game.bullets[i].x > Game.enemies[j].x) && (Game.bullets[i].x < Game.enemies[j].x + Game.enemies[j].W) && (Game.bullets[i].y > Game.enemies[j].y) && (Game.bullets[i].y < Game.enemies[j].y + Game.enemies[j].H) ){
+				if((Game.Player.bullets[i].x > Game.enemies[j].x) 
+				&& (Game.Player.bullets[i].x < Game.enemies[j].x + Game.enemies[j].W) 
+				&& (Game.Player.bullets[i].y > Game.enemies[j].y) 
+				&& (Game.Player.bullets[i].y < Game.enemies[j].y + Game.enemies[j].H) ){
 					Game.enemies[j].img.src = 'imgs/enemy_explosion.png';	
 					//Remove Enemy
 					Game.enemies.splice(j,1); 
 					//Remove Bullet
-					Game.bullets.splice(i,1); 
+					Game.Player.bullets.splice(i,1); 
 				}
 			}
 		}
@@ -120,10 +127,11 @@ Game.Enemy = function() {
 		//Move across the screen?
 	};
 	this.attack = function(x,y) {
-		console.log('Attack!!');
-		console.log(x);
-		console.log(y);
+		var ranNum = Math.floor(Math.random()*100);
 		//Fires at you if you are in their line of sight?
+		if(ranNum < 10){
+			this.bullets.push(new Game.EnemyBullet(x,y));
+		}
 	};
 	this.bullets =[];
 };
@@ -142,11 +150,63 @@ Game.makeEnemies ={
 };
 Game.enemyAttack = function() {
 	for(var i = 0; i < Game.enemies.length; i++) {
-		if(Game.enemies[i].y === Game.player.y + 64 ){
-			//How you account for a range?
-			//trigger attack on i enemy with current postions
-			//loop through y + enemy height
+		if(Game.Player.y >= Game.enemies[i].y 
+		&& Game.Player.y <= Game.enemies[i].y + Game.enemies[i].H){
+			// Get range between Enemy Y and Y + enemie[i].H
 			Game.enemies[i].attack(Game.enemies[i].x,Game.enemies[i].y);
+		}
+	}
+};
+Game.EnemyBullet = function(x,y) {
+	this.x = x;
+	this.y = y + 26;
+	//Render
+	this.render = function(){
+		Game.ctx.fillStyle = '#81FZ6FF';
+		Game.ctx.fillRect(this.x,this.y, 10, 4);
+	};
+	//Update
+	this.update = function(){
+		this.x -= 20;
+	};
+};
+Game.EnemyBulletHandeler = {
+	renderBullets: function() {
+		//Loop through bullets and render them
+		for(var i = 0; i < Game.enemies.length; i++){
+			for(var j = 0; j<Game.enemies[i].bullets.length; j++){
+				Game.enemies[i].bullets[j].render();
+			}
+		}
+	},
+	updateBullets: function() {
+		//Loop through bullets and update them)
+		for(var i = 0; i < Game.enemies.length; i++){
+			for(var j = 0; j<Game.enemies[i].bullets.length; j++){
+				Game.enemies[i].bullets[j].update();
+			}
+		}
+	},
+	collisionCheck: function() {
+		//For all the bullets check to see if they are 
+		//at the same position as the enemy
+		for(var i = 0; i<Game.Player.bullets.length; i++){
+			//If the bullets x pos is greater than the enemies
+			//And the x pos is less than the x + the w aka inside the box
+			//Check the same for y
+			//Hit!
+			for(var j = 0; j<Game.enemies.length; j++){
+				if((Game.Player.bullets[i].x > Game.enemies[j].x) 
+				&& (Game.Player.bullets[i].x < Game.enemies[j].x + Game.enemies[j].W) 
+				&& (Game.Player.bullets[i].y > Game.enemies[j].y) 
+				&& (Game.Player.bullets[i].y < Game.enemies[j].y + Game.enemies[j].H) ){
+					Game.enemies[j].img.src = 'imgs/enemy_explosion.png';	
+					//Remove Enemy
+					Game.enemies.splice(j,1); 
+					//Remove Bullet
+					Game.Player.bullets.splice(i,1); 
+				}
+			}
 		}
 	}
 };
@@ -158,55 +218,55 @@ Game.movement = {
 		//39 is right
 		//40 is Down
 		if(e.keyCode === 37){
-			Game.player.left = true;
-			//Hand handleing for player going beyond bounds
-			Game.player.x -= Game.player.speed;
+			Game.Player.left = true;
+			//Hand handleing for Player going beyond bounds
+			Game.Player.x -= Game.Player.speed;
 		}
 		if(e.keyCode === 38){
-			Game.player.up = true;
-			Game.player.y -= Game.player.speed;
+			Game.Player.up = true;
+			Game.Player.y -= Game.Player.speed;
 		}
 		if(e.keyCode === 39){
-			Game.player.right = true;	
-			Game.player.x += Game.player.speed;
+			Game.Player.right = true;	
+			Game.Player.x += Game.Player.speed;
 		}
 		if(e.keyCode === 40){
-			Game.player.down = true;
-			Game.player.y += Game.player.speed;
+			Game.Player.down = true;
+			Game.Player.y += Game.Player.speed;
 		}
 		//Space bar
 		if(e.keyCode === 32){
-			//create a new bullet at players x and y
-			var bullet = new Game.Bullet(Game.player.x, Game.player.y);
-			Game.bullets.push(bullet);
+			//create a new bullet at Players x and y
+			var bullet = new Game.Bullet(Game.Player.x, Game.Player.y);
+			Game.Player.bullets.push(bullet);
 		}
 	},
 	keyUp: function(e){
 		if(e.keyCode === 37){
-			Game.player.left = false;
+			Game.Player.left = false;
 		}
 		if(e.keyCode === 38){
-			Game.player.up = false;
+			Game.Player.up = false;
 		}
 		if(e.keyCode === 39){
-			Game.player.right = false;
+			Game.Player.right = false;
 		}
 		if(e.keyCode === 40){
-			Game.player.down = false;
+			Game.Player.down = false;
 		}
 	},
 	checkKeys: function(){
-		if(Game.player.left === true){
-			Game.player.x -= Game.player.speed;
+		if(Game.Player.left === true){
+			Game.Player.x -= Game.Player.speed;
 		}
-		if(Game.player.up === true){
-			Game.player.y -= Game.player.speed;
+		if(Game.Player.up === true){
+			Game.Player.y -= Game.Player.speed;
 		}
-		if(Game.player.right === true){
-			Game.player.x += Game.player.speed;
+		if(Game.Player.right === true){
+			Game.Player.x += Game.Player.speed;
 		}
-		if(Game.player.down === true){
-			Game.player.y += Game.player.speed;
+		if(Game.Player.down === true){
+			Game.Player.y += Game.Player.speed;
 		}
 	}
 };
